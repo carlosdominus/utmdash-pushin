@@ -1,0 +1,5 @@
+{
+  "name": "UTMDASH - PUSHIN",
+  "description": "A high-performance visual dashboard that integrates with Google Sheets (via CSV export) or local files. It features interactive filtering, dynamic charting using Recharts, and AI-powered insights using Gemini to analyze data trends and patterns.",
+  "requestFramePermissions": []
+}
