@@ -65,7 +65,10 @@ const App: React.FC = () => {
 
   const addToHistory = (newData: DashboardData, sourceName: string) => {
     const faturamentoHeader = newData.headers.find(h => h.toLowerCase().includes('valor') || h.toLowerCase().includes('faturamento') || h.toLowerCase().includes('amount')) || '';
-    const totalFat = newData.rows.reduce((acc, row) => acc + (Number(row[faturamentoHeader]) || 0), 0);
+    const statusHeader = newData.headers.find(h => h.toLowerCase() === 'status') || '';
+    
+    const validRows = newData.rows.filter(row => String(row[statusHeader] || '').toLowerCase() !== 'pending');
+    const totalFat = validRows.reduce((acc, row) => acc + (Number(row[faturamentoHeader]) || 0), 0);
     
     const newEntry: HistoryEntry = {
       id: crypto.randomUUID(),
@@ -73,7 +76,7 @@ const App: React.FC = () => {
       timestamp: Date.now(),
       data: newData,
       stats: {
-        vendas: newData.rows.length,
+        vendas: validRows.length,
         faturamento: totalFat
       }
     };

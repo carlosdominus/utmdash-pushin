@@ -213,6 +213,9 @@ const Dashboard: React.FC<DashboardProps> = ({
     const counts: Record<string, Record<string, number>> = {};
     categoricalFilterCols.forEach(col => { counts[col] = {}; });
     filteredRows.forEach(row => {
+      const statusVal = String(row[colStatus || ''] || 'N/A').toLowerCase();
+      if (statusVal === 'pending') return;
+      
       categoricalFilterCols.forEach(col => {
         let val = String(row[col] ?? 'N/A');
         if (col === colSource) val = cleanUTMSource(val);
@@ -221,7 +224,7 @@ const Dashboard: React.FC<DashboardProps> = ({
       });
     });
     return counts;
-  }, [filteredRows, categoricalFilterCols, colSource, colCampaign]);
+  }, [filteredRows, categoricalFilterCols, colSource, colCampaign, colStatus]);
 
   const groupedPerformance = useMemo(() => {
     const groups: Record<string, any> = {};
@@ -254,10 +257,12 @@ const Dashboard: React.FC<DashboardProps> = ({
           key
         };
       }
-      groups[key].vendas += 1;
-      groups[key].faturamento += rVal;
-      groups[key].productsMap[prodName] = (groups[key].productsMap[prodName] || 0) + 1;
       groups[key].statusMap[statusVal] = (groups[key].statusMap[statusVal] || 0) + 1;
+      if (statusVal.toLowerCase() !== 'pending') {
+        groups[key].vendas += 1;
+        groups[key].faturamento += rVal;
+        groups[key].productsMap[prodName] = (groups[key].productsMap[prodName] || 0) + 1;
+      }
       if (content !== 'n/a') groups[key].contents.add(content);
       if (medium !== 'n/a') groups[key].mediums.add(medium);
       if (term !== 'n/a') groups[key].terms.add(term);
@@ -277,6 +282,9 @@ const Dashboard: React.FC<DashboardProps> = ({
     const d30 = new Date(); d30.setDate(today.getDate() - 30);
     let countToday = 0, count7 = 0, count30 = 0;
     rowsWithIndex.forEach(row => {
+      const statusVal = String(row[colStatus || ''] || 'N/A').toLowerCase();
+      if (statusVal === 'pending') return;
+      
       const rDate = parseBrazilianDate(row[colData || '']);
       if (!rDate) return;
       if (rDate.toDateString() === today.toDateString()) countToday++;
@@ -289,6 +297,9 @@ const Dashboard: React.FC<DashboardProps> = ({
   const evolutionData = useMemo(() => {
     const daily: Record<string, number> = {};
     filteredRows.forEach(row => {
+      const statusVal = String(row[colStatus || ''] || 'N/A').toLowerCase();
+      if (statusVal === 'pending') return;
+      
       const dateStr = String(row[colData || '']).split(' ')[0];
       daily[dateStr] = (daily[dateStr] || 0) + 1;
     });
@@ -305,6 +316,9 @@ const Dashboard: React.FC<DashboardProps> = ({
     if (!colName) return [];
     const counts: Record<string, number> = {};
     filteredRows.forEach(row => {
+      const statusVal = String(row[colStatus || ''] || 'N/A').toLowerCase();
+      if (statusVal === 'pending') return;
+      
       let val = String(row[colName] || 'N/A').trim();
       if (colName === colSource) val = cleanUTMSource(val);
       if (colName === colCampaign) val = cleanUTMCampaign(val);
@@ -319,8 +333,14 @@ const Dashboard: React.FC<DashboardProps> = ({
 
   const stats = useMemo(() => {
     let fat = 0;
-    filteredRows.forEach(row => { fat += Number(row[colFaturamento || '']) || 0; });
-    const vds = filteredRows.length;
+    let vds = 0;
+    filteredRows.forEach(row => { 
+      const statusVal = String(row[colStatus || ''] || 'N/A').toLowerCase();
+      if (statusVal !== 'pending') {
+        fat += Number(row[colFaturamento || '']) || 0; 
+        vds += 1;
+      }
+    });
     const imp = fat * 0.06;
     const gas = manualInvestment;
     const frz = frozenBalance;
